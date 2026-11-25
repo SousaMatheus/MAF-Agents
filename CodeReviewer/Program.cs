@@ -1,25 +1,23 @@
-﻿using Microsoft.Agents.AI;
+﻿using Anthropic;
+using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using OllamaSharp;
+using Microsoft.Extensions.Configuration;
+
+var config = new ConfigurationBuilder()
+    .AddUserSecrets<Program>()
+    .Build();
 
 var agentMarkdownPath = Path.Combine("Agents", "code-reviewer.md");
 var codePath = Path.Combine("Agents", "code.txt");
-const string ollamaUrl = "http://localhost:11434";
-const string model = "qwen2.5-coder:7b";
+var apiKey = config["Anthropic:ApiKey"];
 
-var handler = new HttpClientHandler();
-var httpClient = new HttpClient(handler)
-{
-    BaseAddress = new Uri(ollamaUrl),
-    Timeout = TimeSpan.FromMinutes(2)
-};
-
-var ollamaClient = new OllamaApiClient(httpClient);
+const string model = "claude-sonnet-4-6";
+var client = new AnthropicClient { ApiKey = apiKey };
 
 var instructions = File.ReadAllText(agentMarkdownPath);
 var code = File.ReadAllText(codePath);
 
-var codeReviewAgent = ollamaClient.AsAIAgent(
+var codeReviewAgent = client.AsAIAgent(
     new ChatClientAgentOptions
     {
         Name = "CodeReviewerAgent",
